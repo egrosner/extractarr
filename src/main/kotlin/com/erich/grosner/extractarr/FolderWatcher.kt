@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.io.path.*
 
 @Service
-class FolderWatcher(val folderToWatch: File, val zipExe: File, val folderConfigProperties: FolderConfigProperties) {
+class FolderWatcher(val folderToWatch: File, val zipCmd: String, val folderConfigProperties: FolderConfigProperties) {
 
     val logger = LoggerFactory.getLogger(FolderWatcher::class.java)
 
@@ -45,7 +45,7 @@ class FolderWatcher(val folderToWatch: File, val zipExe: File, val folderConfigP
     }
 
     private fun extract(rarFile: File) {
-        var pb = ProcessBuilder(zipExe.absolutePath, "e", "-y", "-sdel", rarFile.absolutePath)
+        var pb = ProcessBuilder(zipCmd, "e", "-y", "-sdel", rarFile.absolutePath)
             .redirectErrorStream(true)
             .directory(rarFile.parentFile)
             .start()

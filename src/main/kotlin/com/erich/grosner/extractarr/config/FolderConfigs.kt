@@ -16,7 +16,7 @@ class FolderConfigs() {
     }
 
     @Bean
-    fun zipExe(zipConfigProperties: ZipConfigProperties): File {
-        return File(zipConfigProperties.exeLocation)
+    fun zipCmd(zipConfigProperties: ZipConfigProperties): String {
+        return zipConfigProperties.command
     }
 }

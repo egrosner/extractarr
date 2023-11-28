@@ -23,8 +23,8 @@ class FolderWatcherTests() {
             return File("./testrars/morningshow")
         }
         @Bean
-        fun zipExe(): File {
-            return File("./7z/7zz")
+        fun zipCmd(): String {
+            return "7z"
         }
         @Bean
         fun folderConfigProperties(): FolderConfigProperties {
