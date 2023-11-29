@@ -25,7 +25,7 @@ jobs:
         run: ./gradlew clean build
 
       - name: Build the Docker image
-        run: docker build . --file Dockerfile --tag extractarr:latest
+        run: docker build . --file Dockerfile --tag $DOCKER_USER/extractarr:latest
 
       - name: Push the Docker image
         run: |
