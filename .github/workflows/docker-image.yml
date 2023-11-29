@@ -1,11 +1,11 @@
 name: Docker Image CI
 
 on:
-  push:
-    branches:
-      - main
-  #release:
-  #  types: [published]
+  #push:
+    #branches:
+      #- main
+  release:
+    types: [published]
 
 jobs:
 
@@ -14,6 +14,7 @@ jobs:
     env:
       DOCKER_USER: ${{ secrets.DOCKER_USER }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      TAG: ${{ github.ref_name }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-java@v3.13.0
@@ -25,9 +26,11 @@ jobs:
         run: ./gradlew clean build
 
       - name: Build the Docker image
-        run: docker build . --file Dockerfile --tag $DOCKER_USER/extractarr:latest
+        run: docker build . --file Dockerfile --tag $DOCKER_USER/extractarr:latest --tag $DOCKER_USER/extractarr:$TAG
 
       - name: Push the Docker image
         run: |
           docker login -u $DOCKER_USER -p $DOCKER_PASSWORD
+          echo "Pushing $TAG and latest"
           docker push $DOCKER_USER/extractarr:latest
+          docker push $DOCKER_USER/extractarr:$TAG
