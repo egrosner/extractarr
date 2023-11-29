@@ -1,13 +1,15 @@
 name: Docker Image CI
 
 on:
-  release:
-    types: [published]
+  push:
+    branches:
+      - main
+  #release:
+  #  types: [published]
 
 jobs:
 
   build:
-
     runs-on: ubuntu-latest
 
     steps:
@@ -16,7 +18,12 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
+
       - name: Build Java
         run: ./gradlew clean build
+
       - name: Build the Docker image
         run: docker build . --file Dockerfile --tag extractarr:latest
+
+      - name: Push the Docker image
+        run: docker push karby254/extractarr:latest
