@@ -2,6 +2,11 @@ package com.erich.grosner.extractarr
 
 import com.erich.grosner.extractarr.config.FolderConfigs
 import com.erich.grosner.extractarr.properties.FolderConfigProperties
+import org.jooq.DSLContext
+import org.jooq.Table
+import org.jooq.UpdatableRecord
+import org.jooq.generated.tables.RarFiles
+import org.jooq.generated.tables.records.RarFilesRecord
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.scheduling.annotation.Scheduled
@@ -13,7 +18,10 @@ import java.util.concurrent.TimeUnit
 import kotlin.io.path.*
 
 @Service
-class FolderWatcher(val folderToWatch: File, val zipCmd: String, val folderConfigProperties: FolderConfigProperties) {
+class FolderWatcher(val folderToWatch: File,
+                    val zipCmd: String,
+                    val folderConfigProperties: FolderConfigProperties,
+                    val dslContext: DSLContext) {
 
     val logger = LoggerFactory.getLogger(FolderWatcher::class.java)
 
@@ -69,16 +77,23 @@ class FolderWatcher(val folderToWatch: File, val zipCmd: String, val folderConfi
 
         val acceptedExtensions = listOf("mkv", "mp4", "avi")
 
-        if(success && folderConfigProperties.cleanup) {
-            //and clean them up
-            var otherFiles = rarFile.parentFile.listFiles().filter {
-                it.nameWithoutExtension.lowercase() == rarFile.nameWithoutExtension.lowercase() &&
-                        !acceptedExtensions.contains(it.extension) && it.extension.startsWith("r")
-            }
+        if(success) {
+            //save the success
+            val rarFileRecord = dslContext.newRecord(RarFiles.RAR_FILES)
+            rarFileRecord.fileName = rarFile.name
+            rarFileRecord.store()
 
-            otherFiles.forEach {
-                logger.info("Removing file ${it.name}")
-                it.delete()
+            if(folderConfigProperties.cleanup) {
+                //and clean them up
+                var otherFiles = rarFile.parentFile.listFiles().filter {
+                    it.nameWithoutExtension.lowercase() == rarFile.nameWithoutExtension.lowercase() &&
+                            !acceptedExtensions.contains(it.extension) && it.extension.startsWith("r")
+                }
+
+                otherFiles.forEach {
+                    logger.info("Removing file ${it.name}")
+                    it.delete()
+                }
             }
         }
     }

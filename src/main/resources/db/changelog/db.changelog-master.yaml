@@ -1,0 +1,20 @@
+databaseChangeLog:
+  - changeSet:
+      author: "Erich"
+      id: 1
+      changes:
+        - createTable:
+            tableName: rar_files
+            columns:
+              - column:
+                  name: id
+                  autoIncrement: true
+                  type: int
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: file_name
+                  type: varchar(256)
+                  constraints:
+                    nullable: false
