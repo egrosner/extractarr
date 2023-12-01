@@ -30,6 +30,9 @@ dependencies {
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 	annotationProcessor("org.springframework.boot:spring-boot-configuration-processor")
 
+	//test
+	testImplementation("io.mockk:mockk:1.13.8")
+
 	//database stuff
 	runtimeOnly("org.xerial:sqlite-jdbc:3.44.1.0")
 	implementation("org.springframework.boot:spring-boot-starter-jooq")

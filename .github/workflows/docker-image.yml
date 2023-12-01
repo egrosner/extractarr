@@ -23,7 +23,7 @@ jobs:
           java-version: '17'
 
       - name: Build Java
-        run: ./gradlew clean build
+        run: ./gradlew clean liquibaseLocalSqliteUpdate generateJooq build
 
       - name: Build the Docker image
         run: docker build . --file Dockerfile --tag $DOCKER_USER/extractarr:latest --tag $DOCKER_USER/extractarr:$TAG
