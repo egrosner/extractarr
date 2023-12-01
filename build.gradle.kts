@@ -7,6 +7,7 @@ plugins {
 	kotlin("jvm") version "1.8.22"
 	kotlin("plugin.spring") version "1.8.22"
 	id("nu.studer.jooq") version "8.2"
+	id("org.jetbrains.gradle.liquibase") version "1.6.0-RC.5"
 }
 
 group = "com.erich.grosner"
@@ -34,6 +35,30 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-jooq")
 	jooqGenerator("org.xerial:sqlite-jdbc:3.44.1.0")
 	implementation("org.liquibase:liquibase-core")
+
+	//liquibase gradle stuff
+	liquibaseRuntime("org.liquibase:liquibase-core:4.16.1")
+	liquibaseRuntime("org.liquibase:liquibase-groovy-dsl:3.0.2")
+	liquibaseRuntime("org.xerial:sqlite-jdbc:3.44.1.0")
+}
+
+liquibase {
+
+	activities {
+		all {
+			properties {
+				changeLogFile.set("src/main/resources/db/changelog/db.changelog-master.yaml")
+				driver.set("org.sqlite.JDBC")
+			}
+		}
+		register("local_sqlite") {
+			properties {
+				url.set("jdbc:sqlite:extractarr.db")
+				password.set("")
+				username.set("")
+			}
+		}
+	}
 }
 
 jooq {
@@ -41,6 +66,7 @@ jooq {
 
 	configurations {
 		create("main") {
+			generateSchemaSourceOnCompilation.set(false)
 			jooqConfiguration.apply {
 				logging = Logging.WARN
 				jdbc.apply {

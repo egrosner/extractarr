@@ -18,3 +18,14 @@ databaseChangeLog:
                   type: varchar(256)
                   constraints:
                     nullable: false
+              - column:
+                  name: path
+                  type: TEXT
+                  constraints:
+                    nullable: false
+              - column:
+                  name: extracted
+                  type: boolean
+                  constraints:
+                    nullable: false
+                  defaultValueBoolean: false

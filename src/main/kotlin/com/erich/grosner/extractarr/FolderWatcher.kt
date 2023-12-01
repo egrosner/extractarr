@@ -44,15 +44,44 @@ class FolderWatcher(val folderToWatch: File,
 
         //find all the rars
         logger.info("Scanning for rars in ${folderToWatch.name}")
-        val rars = Files.walk(folderToWatch.toPath()).filter { it.extension == "rar" }.toList()
+        val rars = Files.walk(folderToWatch.toPath()).filter {
+
+            if(it.extension != "rar") {
+                return@filter false
+            }
+
+            //try to find one via composite key that matches to see if we processed it already
+            val fileName = it.name
+            val path = it.parent.absolutePathString()
+            val result: RarFilesRecord? = dslContext.selectFrom(RarFiles.RAR_FILES)
+                .where(RarFiles.RAR_FILES.FILE_NAME.eq(fileName))
+                .and(RarFiles.RAR_FILES.PATH.eq(path))
+                .fetchOne()
+
+            return@filter result?.let {
+                //it did find one, so lets not return this
+                false
+            } ?: true
+
+        }.toList()
 
         rars.forEach {
             logger.info("File being extracted: ${it.fileName}")
-            extract(it.toFile())
+            val result = extract(it.toFile())
+
+            if(result) {
+                //save the success
+                val rarFileRecord = dslContext.newRecord(RarFiles.RAR_FILES).apply {
+                    fileName = it.name
+                    extracted = true
+                    path = it.parent.absolutePathString()
+                }
+                rarFileRecord.store()
+            }
         }
     }
 
-    private fun extract(rarFile: File) {
+    private fun extract(rarFile: File): Boolean {
         var pb = ProcessBuilder(zipCmd, "e", "-y", "-sdel", rarFile.absolutePath)
             .redirectErrorStream(true)
             .directory(rarFile.parentFile)
@@ -77,24 +106,19 @@ class FolderWatcher(val folderToWatch: File,
 
         val acceptedExtensions = listOf("mkv", "mp4", "avi")
 
-        if(success) {
-            //save the success
-            val rarFileRecord = dslContext.newRecord(RarFiles.RAR_FILES)
-            rarFileRecord.fileName = rarFile.name
-            rarFileRecord.store()
+        if(success && folderConfigProperties.cleanup) {
+            //and clean them up
+            var otherFiles = rarFile.parentFile.listFiles()?.filter {
+                it.nameWithoutExtension.lowercase() == rarFile.nameWithoutExtension.lowercase() &&
+                        !acceptedExtensions.contains(it.extension) && it.extension.startsWith("r")
+            } ?: emptyList()
 
-            if(folderConfigProperties.cleanup) {
-                //and clean them up
-                var otherFiles = rarFile.parentFile.listFiles().filter {
-                    it.nameWithoutExtension.lowercase() == rarFile.nameWithoutExtension.lowercase() &&
-                            !acceptedExtensions.contains(it.extension) && it.extension.startsWith("r")
-                }
-
-                otherFiles.forEach {
-                    logger.info("Removing file ${it.name}")
-                    it.delete()
-                }
+            otherFiles.forEach {
+                logger.info("Removing file ${it.name}")
+                it.delete()
             }
         }
+
+        return success
     }
 }
