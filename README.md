@@ -13,12 +13,17 @@ extractarr:
   image: karby254/extractarr:latest
   volumes:
     - /mnt/nas/sync/in:/watch
+    - ./config:/config
 ```
 
 ### Volumes
 As per the example above, the following volumes must be mounted to wherever your rar files are located.
 
-```<your rar file folder>:/watch```
+- ```<your rar file folder>:/watch```
+  - Contains the actual rar files to watch and extract.
+- ```<your config folder>:/config```
+  - Contains the configuration for the application.
+
 
 With read / write access.
 ## Environment Variables
