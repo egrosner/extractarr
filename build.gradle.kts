@@ -46,7 +46,6 @@ dependencies {
 }
 
 liquibase {
-
 	activities {
 		all {
 			properties {
@@ -74,7 +73,7 @@ jooq {
 				logging = Logging.WARN
 				jdbc.apply {
 					driver = "org.sqlite.JDBC"
-					url = "jdbc:sqlite:extractarr.db"
+					url = "jdbc:sqlite:./config/extractarr.db"
 				}
 			}
 		}
