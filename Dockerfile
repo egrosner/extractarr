@@ -2,6 +2,7 @@ FROM eclipse-temurin:17-jdk-jammy
 LABEL authors="karby"
 
 VOLUME /watch
+VOLUME /config
 
 RUN apt update -y && apt install p7zip-full -y
 
