@@ -1,4 +1,4 @@
-[Extractarr](https://github.com/egrosner/extractarr/blob/main/images/extractarr.png)
+![Extractarr](https://raw.githubusercontent.com/egrosner/extractarr/main/images/extractarr.png)
 
 # Extractarr
 [![Docker Image CI](https://github.com/egrosner/extractarr/actions/workflows/docker-image.yml/badge.svg)](https://github.com/egrosner/extractarr/actions/workflows/docker-image.yml)
