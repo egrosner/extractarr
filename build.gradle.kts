@@ -1,5 +1,7 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jooq.meta.jaxb.ForcedType
 import org.jooq.meta.jaxb.Logging
+import java.time.LocalDate
 
 plugins {
 	id("org.springframework.boot") version "3.1.5"
@@ -74,6 +76,18 @@ jooq {
 				jdbc.apply {
 					driver = "org.sqlite.JDBC"
 					url = "jdbc:sqlite:./config/extractarr.db"
+				}
+				generator.apply {
+					database.apply {
+						forcedTypes.addAll(listOf(ForcedType().apply {
+							name = "LOCALDATE"
+							includeExpression = "date_created"
+						},
+						ForcedType().apply {
+							name = "LOCALDATE"
+							includeExpression = "date_updated"
+						}))
+					}
 				}
 			}
 		}

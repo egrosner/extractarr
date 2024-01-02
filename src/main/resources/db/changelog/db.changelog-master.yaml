@@ -29,3 +29,11 @@ databaseChangeLog:
                   constraints:
                     nullable: false
                   defaultValueBoolean: false
+  - changeSet:
+      author: "Erich"
+      id: 2
+      changes:
+        - sql:
+            sql: "ALTER TABLE rar_files ADD date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
+        - sql:
+            sql: "ALTER TABLE rar_files ADD date_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP"
