@@ -41,11 +41,9 @@ How often should it scan for rar files (in minutes)? The default is 1 minute.
 ## Development
 
 ### Changes to the db model
-If you change the db model (via the liquibase yml file), you will need to regenerate the JOOQ pregenerated sql files. In order to do that you must:
+If you change the db model (via the sql migration scripts), you will need to regenerate the JOOQ pregenerated sql files. In order to do that you must:
 
-1. Delete the ```extractarr.db``` file if it exists.
-2. ```gradle liquibaseLocalSqliteUpdate generateJooq```
-3. Delete the ```extractarr.db``` file again and you can now run the program locally.
+1 ```gradle flywayMigrate generateJooq```
 
 ## Licenses
 [![GPLv3 License](https://img.shields.io/badge/License-GPL%20v3-yellow.svg)](https://opensource.org/licenses/)
