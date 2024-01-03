@@ -24,7 +24,7 @@ jobs:
 
       - name: Build Java
         run: |
-          ./gradlew clean liquibaseLocalSqliteUpdate generateJooq
+          ./gradlew clean flywayMigrate generateJooq
           ./gradlew build
 
       - name: Build the Docker image
