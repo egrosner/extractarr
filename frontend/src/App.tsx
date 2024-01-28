@@ -1,37 +1,32 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './components/ui/table'
 import { ColumnDef, flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
 import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card'
 
 type File = {
-  id: number,
-  name: string
+  fileName: string
 }
 
 const columns: ColumnDef<File>[] = [
   {
-    accessorKey: "id",
-    header: "ID",
-  },
-  {
-    accessorKey: "name",
+    accessorKey: "fileName",
     header: "File Name",
   }
 ]
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [data, setData] = useState([])
 
-  const data: File[] = [
-    {
-      id: 1,
-      name: "The.Marvels.720p.rar"
-    },
-    {
-      id: 2,
-      name: "Batman.Returns.1992.1080p.rar"
+  useEffect(() => {
+    const fetchData = async () => {
+      const liveData = await fetch('/api/rarfiles')
+      const liveDataJson = await liveData.json()
+      setData(liveDataJson)
     }
-  ]
+    fetchData()
+  }, [])
+
+  console.log(JSON.stringify(data))
 
   const table = useReactTable({
     columns,
