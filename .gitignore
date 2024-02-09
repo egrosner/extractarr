@@ -38,3 +38,6 @@ out/
 
 ### config db ###
 /config/extractarr.db
+
+### frontend ###
+.frontend-gradle-plugin/
