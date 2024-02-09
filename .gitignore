@@ -43,4 +43,4 @@ out/
 .frontend-gradle-plugin/
 /node
 .DS_Store
-/src/main/resources/static/*
+/src/main/resources/static
