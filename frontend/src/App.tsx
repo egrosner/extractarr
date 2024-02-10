@@ -44,8 +44,15 @@ function App() {
           <CardTitle>Extractarr</CardTitle>
         </CardHeader>
         <CardContent>
-          <h1>Processed Files:</h1>
-          <FileTable columns={columns} data={data} />
+          <Card>
+            <CardHeader>
+              <CardTitle>Processed Files</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <h1>Processed Files:</h1>
+              <FileTable columns={columns} data={data} />
+            </CardContent>
+          </Card>
         </CardContent>
       </Card>
     </>
