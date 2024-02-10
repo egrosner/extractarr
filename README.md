@@ -13,10 +13,15 @@ The build artifact is a docker image so you will need to have docker running. Th
 extractarr:
   container_name: extractarr
   image: karby254/extractarr:latest
+  ports: 
+    - 9595:8080
   volumes:
     - /mnt/nas/sync/in:/watch
     - ./config:/config
 ```
+
+## Frontend
+There is now a frontend hosted by default at port 8080. If you use the docker compose config above you can map this port to any port you would like. It's currently found at the root url so: [https://localhost:9595](https://localhost:9595)
 
 ### Volumes
 As per the example above, the following volumes must be mounted to wherever your rar files are located.
