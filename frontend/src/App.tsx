@@ -4,10 +4,19 @@ import { Card, CardContent, CardHeader, CardTitle } from './components/ui/card'
 import { ColumnDef } from '@tanstack/react-table'
 import FileTable from '@/components/file-table'
 
+import { ValueNoneIcon, CheckCircledIcon, CrossCircledIcon, Half2Icon } from '@radix-ui/react-icons'
+
+/*enum FileStatus {
+  NOT_STARTED,
+  STARTED,
+  FAILED
+}*/
+
 type File = {
   fileName: string,
   path: string,
-  extracted: boolean
+  extracted: boolean,
+  status: string
 }
 
 const columns: ColumnDef<File>[] = [
@@ -20,8 +29,37 @@ const columns: ColumnDef<File>[] = [
     header: "Path",
   },
   {
-    accessorKey: "extracted",
-    header: "Extracted",
+    accessorKey: "status",
+    header: "Status",
+    cell: ({ row }) => {
+      const status: string = row.getValue("status")
+
+      let icon = <ValueNoneIcon />
+      switch(status) {
+        case "None":
+          icon = <ValueNoneIcon />
+          break
+        case "Success":
+          icon = <CheckCircledIcon />
+          break
+        case "Failure":
+          icon = <CrossCircledIcon />
+          break
+        case "Started":
+          icon = <Half2Icon />
+          break
+      }
+      return (
+        <>
+        <div className='flex items-center'>
+          <div className='mr-2'>
+            {icon}
+          </div>
+          {status}
+          </div>
+        </>
+      )
+    }
   }
 ]
 
@@ -49,7 +87,6 @@ function App() {
               <CardTitle>Processed Files</CardTitle>
             </CardHeader>
             <CardContent>
-              <h1>Processed Files:</h1>
               <FileTable columns={columns} data={data} />
             </CardContent>
           </Card>

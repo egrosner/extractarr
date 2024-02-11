@@ -44,9 +44,13 @@ class FolderWatcher(val folderToWatch: File,
 
         //find all the rars
         logger.info("Scanning for rars in ${folderToWatch.name}")
-        val rars = Files.walk(folderToWatch.toPath()).filter {
 
-            if(it.extension != "rar") {
+        //cache all the found rars and their associated db record
+        val mapOfRarFilesRecords = mutableMapOf<String, RarFilesRecord>()
+
+        val rars = Files.walk(folderToWatch.toPath()).filter { it ->
+
+            if(it.extension != "rar" || it.isDirectory()) {
                 return@filter false
             }
 
@@ -58,25 +62,46 @@ class FolderWatcher(val folderToWatch: File,
                 .and(RarFiles.RAR_FILES.PATH.eq(path))
                 .fetchOne()
 
+            //it found a record!
             return@filter result?.let {
-                //it did find one, so lets not return this
-                false
-            } ?: true
+                mapOfRarFilesRecords.put(path, result)
 
+                if(it.status == FileStatus.SUCCESS.status) {
+                    return@let false
+                }
+                else {
+                    return@let true
+                }
+            } ?: true
         }.toList()
 
         rars.forEach {
             logger.info("File being extracted: ${it.fileName}")
+
+            //update the status to started
+            val path = it.parent.absolutePathString()
+            var rarFileRecord = mapOfRarFilesRecords.getOrElse(path) {
+                var newRecord = dslContext.newRecord(RarFiles.RAR_FILES).apply {
+                    this.fileName = it.name
+                    this.extracted = true
+                    this.path = path
+                    this.status = FileStatus.STARTED.status
+                }
+                newRecord.store()
+                return@getOrElse newRecord
+            }
+
             val result = extract(it.toFile())
 
             if(result) {
                 //save the success
-                val rarFileRecord = dslContext.newRecord(RarFiles.RAR_FILES).apply {
-                    fileName = it.name
-                    extracted = true
-                    path = it.parent.absolutePathString()
-                }
-                rarFileRecord.store()
+                rarFileRecord.status = FileStatus.SUCCESS.status
+                rarFileRecord.update()
+            }
+            else {
+                //it failed
+                rarFileRecord.status = FileStatus.FAILURE.status
+                rarFileRecord.update()
             }
         }
     }
@@ -89,7 +114,7 @@ class FolderWatcher(val folderToWatch: File,
 
         //handle the output
         var line: String? = pb.inputReader().readLine()
-        var success: Boolean = false
+        var success = false
         while(line != null) {
             println(line)
             pb.waitFor(1L, TimeUnit.SECONDS)
