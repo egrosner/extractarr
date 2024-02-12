@@ -2,6 +2,7 @@ package com.erich.grosner.extractarr
 
 import com.erich.grosner.extractarr.config.FolderConfigs
 import com.erich.grosner.extractarr.properties.FolderConfigProperties
+import com.erich.grosner.extractarr.rarfiles.RarFilesRepository
 import org.jooq.DSLContext
 import org.jooq.Table
 import org.jooq.UpdatableRecord
@@ -21,7 +22,8 @@ import kotlin.io.path.*
 class FolderWatcher(val folderToWatch: File,
                     val zipCmd: String,
                     val folderConfigProperties: FolderConfigProperties,
-                    val dslContext: DSLContext) {
+                    val dslContext: DSLContext,
+                    val rarFilesRepository: RarFilesRepository) {
 
     val logger = LoggerFactory.getLogger(FolderWatcher::class.java)
 
@@ -145,5 +147,35 @@ class FolderWatcher(val folderToWatch: File,
         }
 
         return success
+    }
+
+    fun retry(id: Int): Boolean {
+        //does the id exist?
+        val rarFile = rarFilesRepository.getByid(id)
+
+        //if so, retry the extraction for this file.
+        val filePath = rarFile?.let {
+            //convert to a file object
+            File(it.path, it.fileName)
+        }
+
+        //update the status with started
+        rarFile?.let {
+            it.status = FileStatus.STARTED.status
+            it.update()
+        }
+
+        val result = filePath?.let {
+            //now try and extract it
+            extract(it)
+        } ?: false
+
+        //update the db table with the result
+        rarFile?.let {
+            it.status = if(result) FileStatus.SUCCESS.status else FileStatus.FAILURE.status
+            it.update()
+        }
+
+        return result
     }
 }
