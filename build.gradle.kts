@@ -1,5 +1,7 @@
+import org.jetbrains.kotlin.build.joinToReadableString
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jooq.meta.jaxb.Logging
+import kotlin.io.path.Path
 
 plugins {
 	id("org.springframework.boot") version "3.1.5"
@@ -8,6 +10,7 @@ plugins {
 	kotlin("plugin.spring") version "1.8.22"
 	id("nu.studer.jooq") version "8.2"
 	id("org.flywaydb.flyway") version "10.4.1"
+	id("org.siouan.frontend-jdk17") version "8.0.0"
 }
 
 group = "com.erich.grosner"
@@ -65,6 +68,32 @@ jooq {
 			}
 		}
 	}
+}
+
+frontend {
+	nodeVersion.set("21.4.0")
+	assembleScript.set("run build")
+	packageJsonDirectory.set(File(projectDir.path, "frontend"))
+	verboseModeEnabled.set(true)
+}
+
+tasks.register<Copy>("processFrontendResources") {
+	// Directory containing the artifacts produced by the frontend project
+	val frontendProjectBuildDir = file("${layout.projectDirectory}/frontend/dist")
+	// Directory where the frontend artifacts must be copied to be packaged alltogether with the backend by the 'war'
+	// plugin.
+	val frontendResourcesDir = file("${layout.projectDirectory}/src/main/resources/static")
+
+	group = "Frontend"
+	description = "Process frontend resources"
+	dependsOn(":assembleFrontend")
+
+	from(frontendProjectBuildDir)
+	into(frontendResourcesDir)
+}
+
+tasks.named<Task>("processResources") {
+	dependsOn("processFrontendResources")
 }
 
 tasks.withType<KotlinCompile> {
