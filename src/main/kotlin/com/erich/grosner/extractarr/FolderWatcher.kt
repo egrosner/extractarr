@@ -2,6 +2,7 @@ package com.erich.grosner.extractarr
 
 import com.erich.grosner.extractarr.config.FolderConfigs
 import com.erich.grosner.extractarr.properties.FolderConfigProperties
+import com.erich.grosner.extractarr.rarfiles.RarFilesRepository
 import org.jooq.DSLContext
 import org.jooq.Table
 import org.jooq.UpdatableRecord
@@ -21,7 +22,8 @@ import kotlin.io.path.*
 class FolderWatcher(val folderToWatch: File,
                     val zipCmd: String,
                     val folderConfigProperties: FolderConfigProperties,
-                    val dslContext: DSLContext) {
+                    val dslContext: DSLContext,
+                    val rarFilesRepository: RarFilesRepository) {
 
     val logger = LoggerFactory.getLogger(FolderWatcher::class.java)
 
@@ -44,9 +46,13 @@ class FolderWatcher(val folderToWatch: File,
 
         //find all the rars
         logger.info("Scanning for rars in ${folderToWatch.name}")
-        val rars = Files.walk(folderToWatch.toPath()).filter {
 
-            if(it.extension != "rar") {
+        //cache all the found rars and their associated db record
+        val mapOfRarFilesRecords = mutableMapOf<String, RarFilesRecord>()
+
+        val rars = Files.walk(folderToWatch.toPath()).filter { it ->
+
+            if(it.extension != "rar" || it.isDirectory()) {
                 return@filter false
             }
 
@@ -58,25 +64,46 @@ class FolderWatcher(val folderToWatch: File,
                 .and(RarFiles.RAR_FILES.PATH.eq(path))
                 .fetchOne()
 
+            //it found a record!
             return@filter result?.let {
-                //it did find one, so lets not return this
-                false
-            } ?: true
+                mapOfRarFilesRecords.put(path, result)
 
+                if(it.status == FileStatus.SUCCESS.status) {
+                    return@let false
+                }
+                else {
+                    return@let true
+                }
+            } ?: true
         }.toList()
 
         rars.forEach {
             logger.info("File being extracted: ${it.fileName}")
+
+            //update the status to started
+            val path = it.parent.absolutePathString()
+            var rarFileRecord = mapOfRarFilesRecords.getOrElse(path) {
+                var newRecord = dslContext.newRecord(RarFiles.RAR_FILES).apply {
+                    this.fileName = it.name
+                    this.extracted = true
+                    this.path = path
+                    this.status = FileStatus.STARTED.status
+                }
+                newRecord.store()
+                return@getOrElse newRecord
+            }
+
             val result = extract(it.toFile())
 
             if(result) {
                 //save the success
-                val rarFileRecord = dslContext.newRecord(RarFiles.RAR_FILES).apply {
-                    fileName = it.name
-                    extracted = true
-                    path = it.parent.absolutePathString()
-                }
-                rarFileRecord.store()
+                rarFileRecord.status = FileStatus.SUCCESS.status
+                rarFileRecord.update()
+            }
+            else {
+                //it failed
+                rarFileRecord.status = FileStatus.FAILURE.status
+                rarFileRecord.update()
             }
         }
     }
@@ -89,7 +116,7 @@ class FolderWatcher(val folderToWatch: File,
 
         //handle the output
         var line: String? = pb.inputReader().readLine()
-        var success: Boolean = false
+        var success = false
         while(line != null) {
             println(line)
             pb.waitFor(1L, TimeUnit.SECONDS)
@@ -120,5 +147,35 @@ class FolderWatcher(val folderToWatch: File,
         }
 
         return success
+    }
+
+    fun retry(id: Int): Boolean {
+        //does the id exist?
+        val rarFile = rarFilesRepository.getByid(id)
+
+        //if so, retry the extraction for this file.
+        val filePath = rarFile?.let {
+            //convert to a file object
+            File(it.path, it.fileName)
+        }
+
+        //update the status with started
+        rarFile?.let {
+            it.status = FileStatus.STARTED.status
+            it.update()
+        }
+
+        val result = filePath?.let {
+            //now try and extract it
+            extract(it)
+        } ?: false
+
+        //update the db table with the result
+        rarFile?.let {
+            it.status = if(result) FileStatus.SUCCESS.status else FileStatus.FAILURE.status
+            it.update()
+        }
+
+        return result
     }
 }

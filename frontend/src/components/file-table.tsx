@@ -10,6 +10,11 @@ export function FileTable<TData, TValue>({ columns, data }: FileTableProps<TData
   const table = useReactTable({
     columns,
     data,
+    state: {
+      columnVisibility: {
+        id: false
+      }
+    },
     getCoreRowModel: getCoreRowModel() 
   })
 
