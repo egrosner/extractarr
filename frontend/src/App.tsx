@@ -8,6 +8,8 @@ import { ValueNoneIcon, CheckCircledIcon, CrossCircledIcon, Half2Icon, ReloadIco
 import { Button } from './components/ui/button'
 import { useToast } from './components/ui/use-toast'
 import { Toaster } from './components/ui/toaster'
+import { NavigationMenu, NavigationMenuItem, NavigationMenuList } from './components/ui/navigation-menu'
+import { Link } from '@radix-ui/react-navigation-menu'
 
 /*enum FileStatus {
   NOT_STARTED,
@@ -115,19 +117,28 @@ function App() {
 
   return (
     <>
-      <Card className='container mx-auto max-w-screen-xl my-16'>
+      <div className='bg-sky-300 rounded-b-2xl shadow-xl'>
+        <div className='p-4 flex'>
+          <div className='text-4xl'>Extractarr</div>
+          <NavigationMenu className="ml-10">
+            <NavigationMenuList>
+              <NavigationMenuItem className="mx-4">
+                <Link href='/'>Dashboard</Link>
+              </NavigationMenuItem>
+              <NavigationMenuItem className="mx-4">
+                <Link href='/settings'>Settings</Link>
+              </NavigationMenuItem>
+            </NavigationMenuList>
+          </NavigationMenu>
+        </div>
+      </div>
+      <div className="text-3xl m-6">Dashboard</div>
+      <Card className='container mx-auto max-w-screen-2xl my-8 mx-6'>
         <CardHeader>
-          <CardTitle>Extractarr</CardTitle>
+          <CardTitle>Processed Files</CardTitle>
         </CardHeader>
         <CardContent>
-          <Card>
-            <CardHeader>
-              <CardTitle>Processed Files</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <FileTable columns={columns} data={data} />
-            </CardContent>
-          </Card>
+          <FileTable columns={columns} data={data} />
         </CardContent>
       </Card>
       <Toaster />
